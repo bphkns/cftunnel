@@ -1,0 +1,146 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  BUN_VERSION: "1.2"
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64
+            runner: ubuntu-latest
+            bun_target: bun-linux-x64
+            pkg: "@thewebkernel/cftunnel-linux-x64"
+          - target: linux-arm64
+            runner: ubuntu-latest
+            bun_target: bun-linux-arm64
+            pkg: "@thewebkernel/cftunnel-linux-arm64"
+          - target: darwin-x64
+            runner: macos-13
+            bun_target: bun-darwin-x64
+            pkg: "@thewebkernel/cftunnel-darwin-x64"
+          - target: darwin-arm64
+            runner: macos-latest
+            bun_target: bun-darwin-arm64
+            pkg: "@thewebkernel/cftunnel-darwin-arm64"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build binary
+        run: |
+          bun build ./src/index.ts --compile --target=${{ matrix.bun_target }} --outfile dist/cftunnel
+          chmod +x dist/cftunnel
+
+      - name: Prepare platform package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG_DIR="npm/cftunnel-${{ matrix.target }}"
+          mkdir -p "$PKG_DIR/bin"
+          cp dist/cftunnel "$PKG_DIR/bin/cftunnel"
+          # Set version in platform package.json
+          cd "$PKG_DIR"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cftunnel-${{ matrix.target }}
+          path: dist/cftunnel
+
+      - name: Upload platform package
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-${{ matrix.target }}
+          path: npm/cftunnel-${{ matrix.target }}/
+
+  publish:
+    name: Publish to npm
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Download all platform packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pkg-*
+          path: npm-staging/
+
+      - name: Publish platform packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          for dir in npm-staging/pkg-*/; do
+            echo "Publishing $(basename "$dir")..."
+            cd "$dir"
+            npm publish --access public
+            cd "$GITHUB_WORKSPACE"
+          done
+
+      - name: Publish main package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          # Update optionalDependencies versions
+          node -e "
+            const pkg = require('./package.json');
+            for (const dep of Object.keys(pkg.optionalDependencies || {})) {
+              pkg.optionalDependencies[dep] = '$VERSION';
+            }
+            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, '\t') + '\n');
+          "
+          npm publish --access public
+
+  release:
+    name: GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cftunnel-*
+          path: binaries/
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          for dir in binaries/cftunnel-*/; do
+            target=$(basename "$dir")
+            cp "$dir/cftunnel" "release/$target"
+            chmod +x "release/$target"
+          done
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release/*

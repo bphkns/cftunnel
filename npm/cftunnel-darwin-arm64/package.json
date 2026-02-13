@@ -1,0 +1,15 @@
+{
+	"name": "@thewebkernel/cftunnel-darwin-arm64",
+	"version": "0.0.0",
+	"description": "cftunnel binary for macOS arm64 (Apple Silicon)",
+	"os": ["darwin"],
+	"cpu": ["arm64"],
+	"bin": {
+		"cftunnel": "bin/cftunnel"
+	},
+	"files": ["bin/"],
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	}
+}

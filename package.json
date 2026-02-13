@@ -4,13 +4,20 @@
 	"description": "Cloudflare Tunnel CLI — ngrok-like dev tunnels on your own domain",
 	"type": "module",
 	"bin": {
-		"cftunnel": "./src/index.ts"
+		"cftunnel": "bin/cftunnel.js"
 	},
 	"files": [
+		"bin/",
 		"src/",
 		"README.md",
 		"LICENSE"
 	],
+	"optionalDependencies": {
+		"@thewebkernel/cftunnel-linux-x64": "0.1.0",
+		"@thewebkernel/cftunnel-linux-arm64": "0.1.0",
+		"@thewebkernel/cftunnel-darwin-x64": "0.1.0",
+		"@thewebkernel/cftunnel-darwin-arm64": "0.1.0"
+	},
 	"keywords": [
 		"cloudflare",
 		"tunnel",
@@ -21,7 +28,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/bphkns/cftunnel.git"
+		"url": "git+https://github.com/bphkns/cftunnel.git"
 	},
 	"engines": {
 		"node": ">=18",
