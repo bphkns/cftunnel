@@ -1,6 +1,6 @@
 {
 	"name": "@thewebkernel/cftunnel",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Cloudflare Tunnel CLI — ngrok-like dev tunnels on your own domain",
 	"type": "module",
 	"bin": {

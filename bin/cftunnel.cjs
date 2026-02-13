@@ -30,6 +30,7 @@ try {
 	const bin = path.join(binDir, "bin", "cftunnel");
 
 	if (fs.existsSync(bin)) {
+		try { fs.chmodSync(bin, 0o755); } catch {}
 		const result = require("child_process").spawnSync(bin, process.argv.slice(2), {
 			stdio: "inherit",
 		});
