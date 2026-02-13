@@ -1,0 +1,49 @@
+src/commands/status.ts
+  52fbb1069d89d979 1-9,11-63
+src/utils/cli.ts
+  52fbb1069d89d979 17-20,26,34,50-51,66-76,89-90,96-107,115-117,123-130,133-134,176-180,183-187,198,206,221,239-240,246-247,256-274
+src/commands/stop.ts
+  52fbb1069d89d979 3-5,8-11
+src/lib/types.ts
+  52fbb1069d89d979 115-117
+src/commands/setup.ts
+  52fbb1069d89d979 9-15,53,59-60,68-70,75-78,82-83,90,118,121-133,135-172,176-178,189-192,196-198,203-215,223-227
+src/commands/list.ts
+  52fbb1069d89d979 3,8
+src/commands/start.ts
+  52fbb1069d89d979 8,13,17,28,30-31,50-51,64,66,71,99-125,127-139,141-146,149-161,163-169,171-172,174
+src/commands/token.ts
+  52fbb1069d89d979 4-5,9-13,17,32,46-47
+src/commands/domain.ts
+  52fbb1069d89d979 1-170
+src/commands/create.ts
+  52fbb1069d89d979 4-5,7-29,33-44,49-71,73,80,122-123,130,132-133,137
+src/lib/config.ts
+  52fbb1069d89d979 41-47,108-115
+src/index.ts
+  52fbb1069d89d979 6-9,11,13-25,27-48,50-55,57-63,65-70,85-90,100-101,114,120-127
+src/commands/delete.ts
+  52fbb1069d89d979 5-6,11,20-23,27-29,136-140,145-146,158,174,176-177,196
+src/utils/tunnels.ts
+  52fbb1069d89d979 1-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.2",
+  "base_commit_sha": "76b11d23f1b74760ebb8a98f6b140d82f93dc755",
+  "prompts": {
+    "52fbb1069d89d979": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_3a977c525ffe0KZgpEOBXGC6CO",
+        "model": "anthropic/claude-opus-4-6"
+      },
+      "human_author": "Bikash Phukan <bphkns@gmail.com>",
+      "messages": [],
+      "total_additions": 852,
+      "total_deletions": 277,
+      "accepted_lines": 751,
+      "overriden_lines": 1
+    }
+  }
+}
