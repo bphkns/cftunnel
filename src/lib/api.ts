@@ -86,7 +86,11 @@ export function createApiClient(token: string) {
 			put<CfTunnelConfig>(`${tunnel(accountId, tunnelId)}/configurations`, {
 				config: {
 					ingress: [
-						{ hostname, service: `http://localhost:${port}` },
+						{
+							hostname,
+							service: `http://localhost:${port}`,
+							originRequest: { httpHostHeader: "localhost" },
+						},
 						{ service: "http_status:404" },
 					],
 				},
