@@ -23,7 +23,7 @@ Admin creates tunnels via API. Devs run them with a single token. No `cloudflare
 npm install -g cftunnel
 
 # Or build from source
-git clone https://github.com/user/cftunnel.git
+git clone https://github.com/bphkns/cftunnel.git
 cd cftunnel
 bun install
 bun run build          # produces standalone binary at dist/cftunnel
