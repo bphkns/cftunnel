@@ -92,6 +92,9 @@ export function createApiClient(token: string) {
 				},
 			}).then((r) => r.map(() => undefined)),
 
+		getTunnelConfig: (accountId: string, tunnelId: string) =>
+			get<CfTunnelConfig>(`${tunnel(accountId, tunnelId)}/configurations`),
+
 		getTunnelToken: (accountId: string, tunnelId: string) =>
 			get<string>(`${tunnel(accountId, tunnelId)}/token`),
 

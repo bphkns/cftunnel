@@ -61,7 +61,7 @@ function startForeground(binary: string, args: string[]): Promise<never> {
 	});
 }
 
-function startBackground(binary: string, args: string[]): void {
+function startBackground(binary: string, args: string[], tunnelUrl?: string): void {
 	const log = logPath();
 	const fd = openSync(log, "a", 0o600);
 
@@ -83,17 +83,19 @@ function startBackground(binary: string, args: string[]): void {
 
 	savePid(pid);
 
-	p.log.success(
-		[
-			"cloudflared running in background.",
-			"",
-			`  ${color.bold("PID")}   ${pid}`,
-			`  ${color.bold("Logs")}  ${color.dim(log)}`,
-			"",
-			`  Stop: ${color.bold("cftunnel stop")}`,
-			`  Tail: ${color.bold(`tail -f ${log}`)}`,
-		].join("\n"),
+	const lines = ["cloudflared running in background.", ""];
+	if (tunnelUrl) {
+		lines.push(`  ${color.bold("URL")}   ${color.cyan(tunnelUrl)}`);
+	}
+	lines.push(
+		`  ${color.bold("PID")}   ${pid}`,
+		`  ${color.bold("Logs")}  ${color.dim(log)}`,
+		"",
+		`  Stop: ${color.bold("cftunnel stop")}`,
+		`  Tail: ${color.bold(`tail -f ${log}`)}`,
 	);
+
+	p.log.success(lines.join("\n"));
 }
 
 async function askMode(): Promise<boolean> {
@@ -153,10 +155,10 @@ export async function start(
 	const api = createApiClient(config.apiToken);
 	await showTunnels(api, config.accountId);
 
-	if (hasDomain(config)) {
-		p.log.step(
-			`Tunnel URL: ${color.bold(`https://${config.prefix}-*.${config.domain}`)} → localhost`,
-		);
+	const tunnelUrl = hasDomain(config) ? `https://${config.prefix}-*.${config.domain}` : undefined;
+
+	if (tunnelUrl) {
+		p.log.step(`Tunnel URL: ${color.bold(tunnelUrl)} → localhost`);
 	}
 
 	const binary = await ensureCloudflared();
@@ -169,7 +171,7 @@ export async function start(
 	);
 
 	if (bg) {
-		startBackground(binary, args);
+		startBackground(binary, args, tunnelUrl);
 	} else {
 		await startForeground(binary, args);
 	}
