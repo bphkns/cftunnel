@@ -14,27 +14,19 @@ env:
 jobs:
   build:
     name: Build ${{ matrix.target }}
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
           - target: linux-x64
-            runner: ubuntu-latest
             bun_target: bun-linux-x64
-            pkg: "@thewebkernel/cftunnel-linux-x64"
           - target: linux-arm64
-            runner: ubuntu-latest
             bun_target: bun-linux-arm64
-            pkg: "@thewebkernel/cftunnel-linux-arm64"
           - target: darwin-x64
-            runner: macos-13
             bun_target: bun-darwin-x64
-            pkg: "@thewebkernel/cftunnel-darwin-x64"
           - target: darwin-arm64
-            runner: macos-latest
             bun_target: bun-darwin-arm64
-            pkg: "@thewebkernel/cftunnel-darwin-arm64"
     steps:
       - uses: actions/checkout@v4
 
