@@ -84,6 +84,7 @@ jobs:
       - name: Publish platform packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          npm_config_ignore_scripts: true
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           for dir in npm-staging/pkg-*/; do
@@ -96,18 +97,18 @@ jobs:
       - name: Publish main package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          npm_config_ignore_scripts: true
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          npm version "$VERSION" --no-git-tag-version --allow-same-version --ignore-scripts
-          # Update optionalDependencies versions
           node -e "
             const pkg = require('./package.json');
+            pkg.version = '$VERSION';
             for (const dep of Object.keys(pkg.optionalDependencies || {})) {
               pkg.optionalDependencies[dep] = '$VERSION';
             }
             require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, '\t') + '\n');
           "
-          npm publish --access public --ignore-scripts
+          npm publish --access public
 
   release:
     name: GitHub Release
