@@ -1,0 +1,39 @@
+README.md
+  52fbb1069d89d979 3,5-7,9,14-15,17-18,23,26,29,32,35-36,38-39,41,43,47,49-50,55,59,61-72,74,76,79,81,86,88,94-97,103
+.github/workflows/release.yml
+  52fbb1069d89d979 1-146
+npm/cftunnel-darwin-x64/package.json
+  52fbb1069d89d979 1-15
+package.json
+  52fbb1069d89d979 7,10,15-20
+install.sh
+  52fbb1069d89d979 1-58
+npm/cftunnel-darwin-arm64/package.json
+  52fbb1069d89d979 1-15
+bin/cftunnel.js
+  52fbb1069d89d979 1-55
+npm/cftunnel-linux-arm64/package.json
+  52fbb1069d89d979 1-15
+npm/cftunnel-linux-x64/package.json
+  52fbb1069d89d979 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.2",
+  "base_commit_sha": "553e477527844f388c904be300c2783d442d87bf",
+  "prompts": {
+    "52fbb1069d89d979": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_3a977c525ffe0KZgpEOBXGC6CO",
+        "model": "anthropic/claude-opus-4-6"
+      },
+      "human_author": "Bikash Phukan <bphkns@gmail.com>",
+      "messages": [],
+      "total_additions": 380,
+      "total_deletions": 223,
+      "accepted_lines": 374,
+      "overriden_lines": 0
+    }
+  }
+}
