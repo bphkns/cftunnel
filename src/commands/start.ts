@@ -35,20 +35,21 @@ function checkAlreadyRunning(): void {
 	clearPid();
 }
 
-function startForeground(binary: string, token: string): void {
+function startForeground(binary: string, token: string): Promise<never> {
 	p.log.info(`Running ${color.bold("cloudflared")} in foreground. Press Ctrl+C to stop.`);
 
 	const child = spawn(binary, ["tunnel", "run", "--token", token], {
 		stdio: "inherit",
 	});
 
-	child.on("error", (err) => {
-		p.log.error(err.message);
-		process.exit(1);
-	});
+	return new Promise((_resolve, reject) => {
+		child.on("error", (err) => {
+			reject(err);
+		});
 
-	child.on("exit", (code) => {
-		process.exit(code ?? 0);
+		child.on("exit", (code) => {
+			process.exit(code ?? 0);
+		});
 	});
 }
 
@@ -97,6 +98,6 @@ export async function start(tokenFlag: string | undefined, background: boolean):
 	if (background) {
 		startBackground(binary, token);
 	} else {
-		startForeground(binary, token);
+		await startForeground(binary, token);
 	}
 }

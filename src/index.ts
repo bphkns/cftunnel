@@ -85,7 +85,9 @@ async function run(): Promise<void> {
 	}
 }
 
-run().catch((err: unknown) => {
-	console.error(err instanceof Error ? err.message : err);
-	process.exit(1);
-});
+run()
+	.then(() => process.exit(0))
+	.catch((err: unknown) => {
+		console.error(err instanceof Error ? err.message : err);
+		process.exit(1);
+	});
