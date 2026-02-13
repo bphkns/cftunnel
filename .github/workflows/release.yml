@@ -98,7 +98,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          npm version "$VERSION" --no-git-tag-version --allow-same-version --ignore-scripts
           # Update optionalDependencies versions
           node -e "
             const pkg = require('./package.json');
