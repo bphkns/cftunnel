@@ -1,5 +1,5 @@
 {
-	"name": "cftunnel",
+	"name": "@thewebkernel/cftunnel",
 	"version": "0.1.0",
 	"description": "Cloudflare Tunnel CLI — ngrok-like dev tunnels on your own domain",
 	"type": "module",
@@ -50,6 +50,9 @@
 		"picocolors": "^1.1.0"
 	},
 	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
 	"lint-staged": {
 		"*.ts": "biome check --no-errors-on-unmatched"
 	}
