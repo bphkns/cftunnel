@@ -89,7 +89,7 @@ jobs:
           for dir in npm-staging/pkg-*/; do
             echo "Publishing $(basename "$dir")..."
             cd "$dir"
-            npm publish --access public
+            npm publish --access public --ignore-scripts
             cd "$GITHUB_WORKSPACE"
           done
 
@@ -107,7 +107,7 @@ jobs:
             }
             require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, '\t') + '\n');
           "
-          npm publish --access public
+          npm publish --access public --ignore-scripts
 
   release:
     name: GitHub Release
