@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
-const VERSION = "0.1.0";
+import { VERSION } from "./lib/constants.js";
+import { parseArgs } from "./utils/cli.js";
 
 const HELP = `
 cftunnel v${VERSION} — Cloudflare Tunnel CLI
@@ -15,7 +16,7 @@ Usage:
   cftunnel help                         Show this help message
 `;
 
-const [command] = process.argv.slice(2);
+const { command } = parseArgs(process.argv);
 
 if (!command || command === "help" || command === "--help" || command === "-h") {
 	console.log(HELP);
@@ -27,6 +28,24 @@ if (command === "--version" || command === "-v") {
 	process.exit(0);
 }
 
-console.log(`Unknown command: ${command}`);
-console.log(HELP);
-process.exit(1);
+const commands: Record<string, () => Promise<{ [k: string]: () => Promise<void> }>> = {
+	setup: () => import("./commands/setup.js"),
+};
+
+const loader = commands[command];
+if (!loader) {
+	console.error(`Unknown command: ${command}\n`);
+	console.log(HELP);
+	process.exit(1);
+}
+
+loader()
+	.then((mod) => {
+		const fn = mod[command];
+		if (!fn) throw new Error(`Command "${command}" not exported`);
+		return fn();
+	})
+	.catch((err: unknown) => {
+		console.error(err instanceof Error ? err.message : err);
+		process.exit(1);
+	});

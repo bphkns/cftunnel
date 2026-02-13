@@ -1,3 +1,30 @@
+import { TaggedError } from "better-result";
+
+export class CfApiError extends TaggedError("CfApiError")<{
+	code: number;
+	message: string;
+}>() {
+	constructor(args: { code: number; detail: string }) {
+		super({ code: args.code, message: `CF API ${args.code}: ${args.detail}` });
+	}
+}
+
+export class CfNetworkError extends TaggedError("CfNetworkError")<{
+	message: string;
+	cause: unknown;
+}>() {
+	constructor(args: { cause: unknown }) {
+		const msg = args.cause instanceof Error ? args.cause.message : "Network request failed";
+		super({ message: msg, cause: args.cause });
+	}
+}
+
+export class ConfigError extends TaggedError("ConfigError")<{
+	message: string;
+}>() {}
+
+export type AppError = CfApiError | CfNetworkError | ConfigError;
+
 export interface CfApiResponse<T> {
 	success: boolean;
 	errors: ReadonlyArray<{ code: number; message: string }>;

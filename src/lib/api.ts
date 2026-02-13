@@ -1,187 +1,118 @@
+import { Result } from "better-result";
 import { CF_API_BASE } from "./constants.js";
-import type {
-	CfAccount,
-	CfApiResponse,
-	CfDnsRecord,
-	CfTokenVerification,
-	CfTunnel,
-	CfTunnelConfig,
-	CfZone,
+import {
+	type CfAccount,
+	CfApiError,
+	type CfApiResponse,
+	type CfDnsRecord,
+	CfNetworkError,
+	type CfTokenVerification,
+	type CfTunnel,
+	type CfTunnelConfig,
+	type CfZone,
 } from "./types.js";
 
-interface FetchOptions {
-	method?: string;
-	body?: unknown;
-}
+type Method = "GET" | "POST" | "PUT" | "DELETE";
 
-export interface ApiClient {
-	verifyToken(): Promise<CfTokenVerification>;
-	listAccounts(): Promise<ReadonlyArray<CfAccount>>;
-	listZones(): Promise<ReadonlyArray<CfZone>>;
-	createTunnel(accountId: string, name: string): Promise<CfTunnel>;
-	deleteTunnel(accountId: string, tunnelId: string): Promise<void>;
-	cleanupConnections(accountId: string, tunnelId: string): Promise<void>;
-	getTunnelByName(accountId: string, name: string): Promise<CfTunnel | undefined>;
-	listTunnels(accountId: string): Promise<ReadonlyArray<CfTunnel>>;
-	setTunnelIngress(
-		accountId: string,
-		tunnelId: string,
-		hostname: string,
-		port: number,
-	): Promise<void>;
-	getTunnelToken(accountId: string, tunnelId: string): Promise<string>;
-	createDnsRecord(zoneId: string, name: string, tunnelId: string): Promise<CfDnsRecord>;
-	deleteDnsRecord(zoneId: string, recordId: string): Promise<void>;
-	findDnsRecord(zoneId: string, name: string): Promise<CfDnsRecord | undefined>;
-}
+type ApiResult<T> = Promise<Result<T, CfApiError | CfNetworkError>>;
 
 async function cfetch<T>(
 	token: string,
 	path: string,
-	options?: FetchOptions,
-): Promise<CfApiResponse<T>> {
-	const url = `${CF_API_BASE}${path}`;
-	const headers: Record<string, string> = {
-		Authorization: `Bearer ${token}`,
-		"Content-Type": "application/json",
-	};
+	method: Method = "GET",
+	body?: unknown,
+): ApiResult<T> {
+	return Result.tryPromise({
+		try: async () => {
+			const init: RequestInit = {
+				method,
+				headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+			};
+			if (body) init.body = JSON.stringify(body);
+			const res = await fetch(`${CF_API_BASE}${path}`, init);
 
-	const init: RequestInit = {
-		method: options?.method ?? "GET",
-		headers,
-	};
-
-	if (options?.body) {
-		init.body = JSON.stringify(options.body);
-	}
-
-	const res = await fetch(url, init);
-	const json: CfApiResponse<T> = await res.json();
-	return json;
+			const json: CfApiResponse<T> = await res.json();
+			if (!json.success) {
+				const first = json.errors[0];
+				throw new CfApiError({
+					code: first?.code ?? 0,
+					detail: first?.message ?? "Unknown Cloudflare API error",
+				});
+			}
+			return json.result;
+		},
+		catch: (cause) => {
+			if (cause instanceof CfApiError) return cause;
+			return new CfNetworkError({ cause });
+		},
+	});
 }
 
-export function createApiClient(token: string): ApiClient {
+export function createApiClient(token: string) {
+	const get = <T>(path: string) => cfetch<T>(token, path);
+	const post = <T>(path: string, body: unknown) => cfetch<T>(token, path, "POST", body);
+	const put = <T>(path: string, body: unknown) => cfetch<T>(token, path, "PUT", body);
+	const del = <T>(path: string) => cfetch<T>(token, path, "DELETE");
+
+	const account = (id: string) => `/accounts/${id}`;
+	const tunnel = (accountId: string, tunnelId: string) =>
+		`${account(accountId)}/cfd_tunnel/${tunnelId}`;
+
 	return {
-		async verifyToken() {
-			const res = await cfetch<CfTokenVerification>(token, "/user/tokens/verify");
-			if (!res.success) throw new Error(formatError(res));
-			return res.result;
-		},
+		verifyToken: () => get<CfTokenVerification>("/user/tokens/verify"),
+		listAccounts: () => get<ReadonlyArray<CfAccount>>("/accounts"),
+		listZones: () => get<ReadonlyArray<CfZone>>("/zones"),
 
-		async listAccounts() {
-			const res = await cfetch<ReadonlyArray<CfAccount>>(token, "/accounts");
-			if (!res.success) throw new Error(formatError(res));
-			return res.result;
-		},
+		createTunnel: (accountId: string, name: string) =>
+			post<CfTunnel>(`${account(accountId)}/cfd_tunnel`, { name, config_src: "cloudflare" }),
 
-		async listZones() {
-			const res = await cfetch<ReadonlyArray<CfZone>>(token, "/zones");
-			if (!res.success) throw new Error(formatError(res));
-			return res.result;
-		},
+		deleteTunnel: (accountId: string, tunnelId: string) =>
+			del<null>(tunnel(accountId, tunnelId)).then((r) => r.map(() => undefined)),
 
-		async createTunnel(accountId, name) {
-			const res = await cfetch<CfTunnel>(token, `/accounts/${accountId}/cfd_tunnel`, {
-				method: "POST",
-				body: { name, config_src: "cloudflare" },
-			});
-			if (!res.success) throw new Error(formatError(res));
-			return res.result;
-		},
+		cleanupConnections: (accountId: string, tunnelId: string) =>
+			del<null>(`${tunnel(accountId, tunnelId)}/connections`).then((r) => r.map(() => undefined)),
 
-		async deleteTunnel(accountId, tunnelId) {
-			const res = await cfetch<null>(token, `/accounts/${accountId}/cfd_tunnel/${tunnelId}`, {
-				method: "DELETE",
-			});
-			if (!res.success) throw new Error(formatError(res));
-		},
-
-		async cleanupConnections(accountId, tunnelId) {
-			await cfetch<null>(token, `/accounts/${accountId}/cfd_tunnel/${tunnelId}/connections`, {
-				method: "DELETE",
-			});
-		},
-
-		async getTunnelByName(accountId, name) {
-			const res = await cfetch<ReadonlyArray<CfTunnel>>(
-				token,
-				`/accounts/${accountId}/cfd_tunnel?name=${encodeURIComponent(name)}&is_deleted=false`,
+		getTunnelByName: async (accountId: string, name: string) => {
+			const result = await get<ReadonlyArray<CfTunnel>>(
+				`${account(accountId)}/cfd_tunnel?name=${encodeURIComponent(name)}&is_deleted=false`,
 			);
-			if (!res.success) throw new Error(formatError(res));
-			return res.result.find((t) => t.name === name);
+			return result.map((tunnels) => tunnels.find((t) => t.name === name));
 		},
 
-		async listTunnels(accountId) {
-			const res = await cfetch<ReadonlyArray<CfTunnel>>(
-				token,
-				`/accounts/${accountId}/cfd_tunnel?is_deleted=false`,
-			);
-			if (!res.success) throw new Error(formatError(res));
-			return res.result;
-		},
+		listTunnels: (accountId: string) =>
+			get<ReadonlyArray<CfTunnel>>(`${account(accountId)}/cfd_tunnel?is_deleted=false`),
 
-		async setTunnelIngress(accountId, tunnelId, hostname, port) {
-			const res = await cfetch<CfTunnelConfig>(
-				token,
-				`/accounts/${accountId}/cfd_tunnel/${tunnelId}/configurations`,
-				{
-					method: "PUT",
-					body: {
-						config: {
-							ingress: [
-								{ hostname, service: `http://localhost:${port}` },
-								{ service: "http_status:404" },
-							],
-						},
-					},
+		setTunnelIngress: (accountId: string, tunnelId: string, hostname: string, port: number) =>
+			put<CfTunnelConfig>(`${tunnel(accountId, tunnelId)}/configurations`, {
+				config: {
+					ingress: [
+						{ hostname, service: `http://localhost:${port}` },
+						{ service: "http_status:404" },
+					],
 				},
-			);
-			if (!res.success) throw new Error(formatError(res));
-		},
+			}).then((r) => r.map(() => undefined)),
 
-		async getTunnelToken(accountId, tunnelId) {
-			const res = await cfetch<string>(
-				token,
-				`/accounts/${accountId}/cfd_tunnel/${tunnelId}/token`,
-			);
-			if (!res.success) throw new Error(formatError(res));
-			return res.result;
-		},
+		getTunnelToken: (accountId: string, tunnelId: string) =>
+			get<string>(`${tunnel(accountId, tunnelId)}/token`),
 
-		async createDnsRecord(zoneId, name, tunnelId) {
-			const res = await cfetch<CfDnsRecord>(token, `/zones/${zoneId}/dns_records`, {
-				method: "POST",
-				body: {
-					type: "CNAME",
-					name,
-					content: `${tunnelId}.cfargotunnel.com`,
-					proxied: true,
-				},
-			});
-			if (!res.success) throw new Error(formatError(res));
-			return res.result;
-		},
+		createDnsRecord: (zoneId: string, name: string, tunnelId: string) =>
+			post<CfDnsRecord>(`/zones/${zoneId}/dns_records`, {
+				type: "CNAME",
+				name,
+				content: `${tunnelId}.cfargotunnel.com`,
+				proxied: true,
+			}),
 
-		async deleteDnsRecord(zoneId, recordId) {
-			const res = await cfetch<null>(token, `/zones/${zoneId}/dns_records/${recordId}`, {
-				method: "DELETE",
-			});
-			if (!res.success) throw new Error(formatError(res));
-		},
+		deleteDnsRecord: (zoneId: string, recordId: string) =>
+			del<null>(`/zones/${zoneId}/dns_records/${recordId}`).then((r) => r.map(() => undefined)),
 
-		async findDnsRecord(zoneId, name) {
-			const res = await cfetch<ReadonlyArray<CfDnsRecord>>(
-				token,
+		findDnsRecord: async (zoneId: string, name: string) => {
+			const result = await get<ReadonlyArray<CfDnsRecord>>(
 				`/zones/${zoneId}/dns_records?type=CNAME&name=${encodeURIComponent(name)}`,
 			);
-			if (!res.success) throw new Error(formatError(res));
-			return res.result[0];
+			return result.map((records) => records[0]);
 		},
 	};
 }
 
-function formatError(res: CfApiResponse<unknown>): string {
-	const first = res.errors[0];
-	if (!first) return "Unknown Cloudflare API error";
-	return `CF API error ${first.code}: ${first.message}`;
-}
+export type ApiClient = ReturnType<typeof createApiClient>;

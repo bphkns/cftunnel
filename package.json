@@ -22,6 +22,7 @@
 	},
 	"dependencies": {
 		"@clack/prompts": "^1.0.0",
+		"better-result": "^2.7.0",
 		"picocolors": "^1.1.0"
 	},
 	"license": "MIT"
