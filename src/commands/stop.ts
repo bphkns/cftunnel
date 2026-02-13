@@ -1,13 +1,16 @@
 import * as p from "@clack/prompts";
 import color from "picocolors";
 import { createApiClient } from "../lib/api.js";
-import { clearPid, isProcessRunning, loadPid, logPath, requireConfig } from "../lib/config.js";
+import { clearPid, isProcessRunning, loadConfig, loadPid, logPath } from "../lib/config.js";
 import { showTunnels } from "../utils/tunnels.js";
 
 export async function stop(): Promise<void> {
-	const config = requireConfig();
-	const api = createApiClient(config.apiToken);
-	await showTunnels(api, config.accountId);
+	const configResult = loadConfig();
+	if (configResult.isOk()) {
+		const config = configResult.value;
+		const api = createApiClient(config.apiToken);
+		await showTunnels(api, config.accountId);
+	}
 
 	const pid = loadPid();
 

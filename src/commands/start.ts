@@ -7,10 +7,10 @@ import {
 	clearPid,
 	hasDomain,
 	isProcessRunning,
+	loadConfig,
 	loadPid,
 	loadToken,
 	logPath,
-	requireConfig,
 	savePid,
 } from "../lib/config.js";
 import { ensureCloudflared } from "../utils/cloudflared.js";
@@ -151,11 +151,16 @@ export async function start(
 	if (quick) return startQuick(background, port);
 
 	const token = resolveToken(tokenFlag);
-	const config = requireConfig();
-	const api = createApiClient(config.apiToken);
-	await showTunnels(api, config.accountId);
 
-	const tunnelUrl = hasDomain(config) ? `https://${config.prefix}-*.${config.domain}` : undefined;
+	// Show tunnel info if admin config is available (optional for devs)
+	let tunnelUrl: string | undefined;
+	const configResult = loadConfig();
+	if (configResult.isOk()) {
+		const config = configResult.value;
+		const api = createApiClient(config.apiToken);
+		await showTunnels(api, config.accountId);
+		tunnelUrl = hasDomain(config) ? `https://${config.prefix}-*.${config.domain}` : undefined;
+	}
 
 	if (tunnelUrl) {
 		p.log.step(`Tunnel URL: ${color.bold(tunnelUrl)} → localhost`);
