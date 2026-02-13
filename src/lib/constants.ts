@@ -6,4 +6,6 @@ export const DEFAULT_PREFIX = "local-dev";
 export const CONFIG_DIR_NAME = "cftunnel";
 export const CONFIG_FILE_NAME = "config.json";
 export const TOKEN_FILE_NAME = "tunnel-token";
+export const PID_FILE_NAME = "cloudflared.pid";
+export const LOG_FILE_NAME = "cloudflared.log";
 export const VERSION = "0.1.0";

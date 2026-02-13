@@ -1,3 +1,9 @@
+const SHORT_FLAGS: Record<string, string> = {
+	d: "background",
+	h: "help",
+	v: "version",
+};
+
 export function parseArgs(argv: ReadonlyArray<string>): {
 	command: string | undefined;
 	positional: ReadonlyArray<string>;
@@ -15,11 +21,20 @@ export function parseArgs(argv: ReadonlyArray<string>): {
 		if (arg.startsWith("--")) {
 			const key = arg.slice(2);
 			const next = args[i + 1];
-			if (next && !next.startsWith("--")) {
+			if (next && !next.startsWith("-")) {
 				flags[key] = next;
 				i++;
 			} else {
 				flags[key] = true;
+			}
+			continue;
+		}
+
+		if (arg.startsWith("-") && arg.length === 2) {
+			const short = arg[1];
+			if (short) {
+				const long = SHORT_FLAGS[short];
+				flags[long ?? short] = true;
 			}
 			continue;
 		}

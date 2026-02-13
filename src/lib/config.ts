@@ -1,8 +1,14 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { Result } from "better-result";
-import { CONFIG_DIR_NAME, CONFIG_FILE_NAME, TOKEN_FILE_NAME } from "./constants.js";
+import {
+	CONFIG_DIR_NAME,
+	CONFIG_FILE_NAME,
+	LOG_FILE_NAME,
+	PID_FILE_NAME,
+	TOKEN_FILE_NAME,
+} from "./constants.js";
 import { type AppConfig, ConfigError } from "./types.js";
 
 function dataDir(): string {
@@ -93,4 +99,48 @@ export function saveToken(token: string): Result<void, ConfigError> {
 
 export function configExists(): boolean {
 	return existsSync(configPath());
+}
+
+function pidPath(): string {
+	return join(dataDir(), PID_FILE_NAME);
+}
+
+export function logPath(): string {
+	return join(dataDir(), LOG_FILE_NAME);
+}
+
+export function savePid(pid: number): void {
+	ensureDir(dataDir());
+	writeFileSync(pidPath(), String(pid), { mode: 0o600 });
+}
+
+export function loadPid(): number | undefined {
+	const path = pidPath();
+	if (!existsSync(path)) return undefined;
+
+	try {
+		const raw = readFileSync(path, "utf-8").trim();
+		const pid = Number(raw);
+		if (Number.isNaN(pid) || pid < 1) return undefined;
+		return pid;
+	} catch {
+		return undefined;
+	}
+}
+
+export function clearPid(): void {
+	const path = pidPath();
+	if (!existsSync(path)) return;
+	try {
+		unlinkSync(path);
+	} catch {}
+}
+
+export function isProcessRunning(pid: number): boolean {
+	try {
+		process.kill(pid, 0);
+		return true;
+	} catch {
+		return false;
+	}
 }
