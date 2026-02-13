@@ -1,0 +1,23 @@
+.github/workflows/release.yml
+  52fbb1069d89d979 87,100,105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.2",
+  "base_commit_sha": "770e53544ab75a215c463b96d670fa2925b94572",
+  "prompts": {
+    "52fbb1069d89d979": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_3a977c525ffe0KZgpEOBXGC6CO",
+        "model": "anthropic/claude-opus-4-6"
+      },
+      "human_author": "Bikash Phukan <bphkns@gmail.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 3,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
