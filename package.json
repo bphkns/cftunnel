@@ -41,7 +41,7 @@
 		"lint:fix": "biome check --write src/",
 		"format": "biome format --write src/",
 		"check": "tsc --noEmit",
-		"prepare": "husky",
+		"prepare": "husky || true",
 		"prepublishOnly": "bun run lint && bun run check"
 	},
 	"devDependencies": {
