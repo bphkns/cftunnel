@@ -64,6 +64,23 @@ async function run(): Promise<void> {
 			const { create } = await import("./commands/create.js");
 			return create(requireName(), getPort());
 		}
+		case "delete": {
+			const { del } = await import("./commands/delete.js");
+			return del(requireName());
+		}
+		case "list": {
+			const { list } = await import("./commands/list.js");
+			return list();
+		}
+		case "token": {
+			const { token } = await import("./commands/token.js");
+			return token(requireName());
+		}
+		case "start": {
+			const { start } = await import("./commands/start.js");
+			const tokenFlag = flags.token;
+			return start(typeof tokenFlag === "string" ? tokenFlag : undefined);
+		}
 		default:
 			console.error(`Unknown command: ${command}\n`);
 			console.log(HELP);
