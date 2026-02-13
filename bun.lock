@@ -16,6 +16,12 @@
         "lint-staged": "^16.2.7",
         "typescript": "^5.7.0",
       },
+      "optionalDependencies": {
+        "@thewebkernel/cftunnel-darwin-arm64": "0.1.0",
+        "@thewebkernel/cftunnel-darwin-x64": "0.1.0",
+        "@thewebkernel/cftunnel-linux-arm64": "0.1.0",
+        "@thewebkernel/cftunnel-linux-x64": "0.1.0",
+      },
     },
   },
   "packages": {
@@ -40,6 +46,14 @@
     "@clack/core": ["@clack/core@1.0.1", "", { "dependencies": { "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-WKeyK3NOBwDOzagPR5H08rFk9D/WuN705yEbuZvKqlkmoLM2woKtXb10OO2k1NoSU4SFG947i2/SCYh+2u5e4g=="],
 
     "@clack/prompts": ["@clack/prompts@1.0.1", "", { "dependencies": { "@clack/core": "1.0.1", "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-/42G73JkuYdyWZ6m8d/CJtBrGl1Hegyc7Fy78m5Ob+jF85TOUmLR5XLce/U3LxYAw0kJ8CT5aI99RIvPHcGp/Q=="],
+
+    "@thewebkernel/cftunnel-darwin-arm64": ["@thewebkernel/cftunnel-darwin-arm64@0.1.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-6vh70S/+ATD0pebCYIhNo1tvE7zjwBS3TG+OnixmdZI1QYKHuv6u72lyHhYJfY3imGBmdMIsT0bUyiqRU5Ui9g=="],
+
+    "@thewebkernel/cftunnel-darwin-x64": ["@thewebkernel/cftunnel-darwin-x64@0.1.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-Qs9qXR1o7VhcV0lbZSiJvXk76QpKnOJB8knLf7R3l1W3fQQ2yvbDHWL33B/CNgoI4OjMPZ+uqX2+qw3inWQrEQ=="],
+
+    "@thewebkernel/cftunnel-linux-arm64": ["@thewebkernel/cftunnel-linux-arm64@0.1.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-mRnPBhU3sCpJF+lEtuHtV9lYUgHIng5FF3T4Y2pgtI1Cy9/5OzFDm2tiOTy3VhocUumhaAgpJn1SCmAmtaHSeA=="],
+
+    "@thewebkernel/cftunnel-linux-x64": ["@thewebkernel/cftunnel-linux-x64@0.1.0", "", { "os": "linux", "cpu": "x64" }, "sha512-SexkHkpFvKUQWL9orXElK3b912hid90lK661zTI6hy5AegCASdTR3kcBCkKbTMqJEDAeeajnDDl4OQddckhYnQ=="],
 
     "@types/bun": ["@types/bun@1.3.9", "", { "dependencies": { "bun-types": "1.3.9" } }, "sha512-KQ571yULOdWJiMH+RIWIOZ7B2RXQGpL1YQrBtLIV3FqDcCu6FsbFUBwhdKUlCKUpS3PJDsHlJ1QKlpxoVR+xtw=="],
 

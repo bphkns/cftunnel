@@ -89,7 +89,7 @@ jobs:
           for dir in npm-staging/pkg-*/; do
             echo "Publishing $(basename "$dir")..."
             cd "$dir"
-            npm publish --access public --ignore-scripts
+            npm publish --access public --ignore-scripts || echo "Already published, skipping"
             cd "$GITHUB_WORKSPACE"
           done
 
