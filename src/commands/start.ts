@@ -5,6 +5,7 @@ import color from "picocolors";
 import { createApiClient } from "../lib/api.js";
 import {
 	clearPid,
+	configExists,
 	hasDomain,
 	isProcessRunning,
 	loadConfig,
@@ -12,26 +13,69 @@ import {
 	loadToken,
 	logPath,
 	savePid,
+	saveToken,
 } from "../lib/config.js";
+import { TUNNEL_TOKEN_ENV } from "../lib/constants.js";
 import { ensureCloudflared } from "../utils/cloudflared.js";
 import { showTunnels } from "../utils/tunnels.js";
 
-function resolveToken(tokenFlag: string | undefined): string {
-	const token = tokenFlag ?? loadToken();
-	if (token) return token;
+async function resolveToken(tokenFlag: string | undefined): Promise<string> {
+	// 1. Explicit flag (highest priority) — save for future use
+	if (tokenFlag) {
+		const result = saveToken(tokenFlag);
+		if (result.isOk()) {
+			p.log.info(color.dim("Token saved locally — next time just run: cftunnel start"));
+		}
+		return tokenFlag;
+	}
 
-	p.log.error(
+	// 2. Environment variable
+	const envToken = process.env[TUNNEL_TOKEN_ENV];
+	if (envToken) return envToken;
+
+	// 3. Saved token file
+	const saved = loadToken();
+	if (saved) return saved;
+
+	// 4. No token — if admin, tell them to setup; if dev, prompt for token
+	if (configExists()) {
+		p.log.warn(
+			[
+				"No tunnel token found. Create a tunnel first:",
+				`  ${color.bold("cftunnel create <name>")}`,
+			].join("\n"),
+		);
+		process.exit(1);
+	}
+
+	// Dev without any config — prompt for token
+	p.log.info(
 		[
-			"No tunnel token found.",
-			"",
-			"Get a token from your admin, then run:",
-			`  ${color.bold("cftunnel start --token <TOKEN>")}`,
-			"",
-			"Or for a quick public URL without setup:",
-			`  ${color.bold("cftunnel start --quick")}`,
+			"No setup found — running as a dev.",
+			color.dim("Ask your admin for a tunnel token, or use --quick for a public URL."),
 		].join("\n"),
 	);
-	process.exit(1);
+
+	const input = await p.text({
+		message: "Paste your tunnel token",
+		placeholder: "eyJhIjoiYjAx...",
+		validate: (v) => {
+			if (!v || !v.trim()) return "Token is required";
+			return undefined;
+		},
+	});
+
+	if (p.isCancel(input)) {
+		p.cancel("Cancelled.");
+		process.exit(0);
+	}
+
+	const token = input.trim();
+	const result = saveToken(token);
+	if (result.isOk()) {
+		p.log.info(color.dim("Token saved — next time just run: cftunnel start"));
+	}
+	return token;
 }
 
 function checkAlreadyRunning(): void {
@@ -150,7 +194,7 @@ export async function start(
 
 	if (quick) return startQuick(background, port);
 
-	const token = resolveToken(tokenFlag);
+	const token = await resolveToken(tokenFlag);
 
 	// Show tunnel info if admin config is available (optional for devs)
 	let tunnelUrl: string | undefined;

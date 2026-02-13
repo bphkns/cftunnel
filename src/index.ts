@@ -46,37 +46,33 @@ ${B}FLAGS${R}
   start      -d, --background      Run in background
   start      -q, --quick           Quick tunnel ${D}(random trycloudflare.com URL)${R}
   start      -p, --port PORT       Port for quick tunnel ${D}(default: 3000)${R}
-  start      --token TOKEN         Use a specific token
+  start      --token TOKEN         Use a specific token ${D}(saved for future use)${R}
   ${"─".repeat(70)}
   completions --shell SHELL        Shell type ${D}(bash, zsh, fish; auto-detects)${R}
 
+${B}ENVIRONMENT${R}
+  CFTUNNEL_TOKEN                   Tunnel token ${D}(alternative to --token flag)${R}
+
 ${B}EXAMPLES${R}
-  ${D}# Setup & config${R}
+  ${D}# Admin: setup & manage${R}
   cftunnel setup                          Interactive setup wizard
   cftunnel setup --token abc123           Non-interactive with token
   cftunnel domain                         Add or change domain
-  cftunnel domain --clear                 Remove domain
-
-  ${D}# Create & manage tunnels${R}
   cftunnel new stark                      Create → local-dev-stark.example.dev
   cftunnel new wolverine -p 8080          Custom port
   cftunnel token thor                     Print token for thor
-  cftunnel rm rogue                       Delete tunnel + DNS
   cftunnel rm rogue -f                    Delete without confirmation
   cftunnel ls                             List all tunnels
 
-  ${D}# Run tunnels${R}
-  cftunnel start                          Run tunnel ${D}(prompts for mode)${R}
+  ${D}# Dev: run tunnels (no setup needed)${R}
+  cftunnel start --token <TOKEN>          First time ${D}(saves token locally)${R}
+  cftunnel start                          After that ${D}(uses saved token)${R}
   cftunnel start -d                       Run in background
-  cftunnel start --quick                  Quick public URL, no domain needed
-  cftunnel start --quick -p 8080          Quick tunnel on port 8080
+  cftunnel start --quick                  Quick public URL, no token needed
   cftunnel stop                           Stop background tunnel
 
   ${D}# Shell completions${R}
-  cftunnel completions >> ~/.zshrc        Zsh ${D}(auto-detects shell)${R}
-  cftunnel completions --shell bash       Bash
-  cftunnel completions --shell fish | \\
-    source                                Fish ${D}(or save to completions dir)${R}
+  cftunnel completions                    Show install instructions + script
 `;
 
 const args = parse(process.argv);
