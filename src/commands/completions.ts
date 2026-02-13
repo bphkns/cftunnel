@@ -1,3 +1,7 @@
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
 const COMMANDS = [
 	"setup",
 	"status",
@@ -171,36 +175,53 @@ function generate(shell: Shell): string {
 	}
 }
 
+const COMPLETION_PATHS: Record<Shell, ReadonlyArray<string>> = {
+	zsh: [
+		join(homedir(), ".local/share/zsh/completions/_cftunnel"),
+		join(homedir(), ".zsh/completions/_cftunnel"),
+		"/usr/local/share/zsh/site-functions/_cftunnel",
+		"/usr/share/zsh/site-functions/_cftunnel",
+	],
+	bash: [
+		join(homedir(), ".local/share/bash-completion/completions/cftunnel"),
+		"/usr/share/bash-completion/completions/cftunnel",
+		"/etc/bash_completion.d/cftunnel",
+	],
+	fish: [
+		join(homedir(), ".config/fish/completions/cftunnel.fish"),
+		"/usr/share/fish/vendor_completions.d/cftunnel.fish",
+	],
+};
+
+function findInstalled(shell: Shell): string | undefined {
+	return COMPLETION_PATHS[shell].find((p) => existsSync(p));
+}
+
 function installHint(shell: Shell): string {
 	switch (shell) {
 		case "zsh":
 			return [
-				"# Save to a directory in your fpath, then restart shell:",
 				"  mkdir -p ~/.local/share/zsh/completions",
 				"  cftunnel completions --shell zsh > ~/.local/share/zsh/completions/_cftunnel",
 				"",
-				"# Make sure your .zshrc has (before compinit):",
+				"  # Make sure your .zshrc has (before compinit):",
 				"  fpath=(~/.local/share/zsh/completions $fpath)",
 				"  autoload -Uz compinit && compinit",
 				"",
-				"# Then reload:",
 				"  exec zsh",
 			].join("\n");
 		case "bash":
 			return [
-				"# Save and source in .bashrc:",
 				"  mkdir -p ~/.local/share/bash-completion/completions",
 				"  cftunnel completions --shell bash > ~/.local/share/bash-completion/completions/cftunnel",
 				"",
-				"# Then reload:",
 				"  exec bash",
 			].join("\n");
 		case "fish":
 			return [
-				"# Save to fish completions dir:",
 				"  cftunnel completions --shell fish > ~/.config/fish/completions/cftunnel.fish",
 				"",
-				"# Fish picks it up automatically on next session.",
+				"  # Fish picks it up automatically on next session.",
 			].join("\n");
 	}
 }
@@ -221,10 +242,16 @@ export function completions(shell: string | undefined): void {
 	const isTTY = process.stdout.isTTY === true;
 
 	if (isTTY) {
-		console.error(`# cftunnel completions for ${resolved}\n`);
+		const installed = findInstalled(resolved);
+		if (installed) {
+			console.error(`# Completions already installed: ${installed}`);
+			console.error("# To update, re-run the install command below.\n");
+		} else {
+			console.error(`# Completions not installed for ${resolved}.\n`);
+		}
+		console.error("# Install:");
 		console.error(installHint(resolved));
-		console.error("");
-		console.error("# --- Completion script below ---\n");
+		console.error("\n# --- Completion script below ---\n");
 	}
 
 	console.log(generate(resolved));
