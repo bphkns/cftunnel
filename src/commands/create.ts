@@ -10,6 +10,8 @@ export async function create(name: string, port: number): Promise<void> {
 	const api = createApiClient(config.apiToken);
 	const hostname = `${config.prefix}-${name}.${config.domain}`;
 
+	p.log.info(color.dim("Cloudflare Tunnels are free — no usage charges for tunnels or DNS."));
+
 	const existingResult = await api.getTunnelByName(config.accountId, `${config.prefix}-${name}`);
 	if (existingResult.isOk() && existingResult.value) {
 		p.log.error(`Tunnel "${config.prefix}-${name}" already exists.`);
@@ -75,5 +77,7 @@ export async function create(name: string, port: number): Promise<void> {
 		].join("\n"),
 	);
 
-	p.outro("Tunnel ready!");
+	p.outro(
+		`Tunnel ready! Run ${color.bold("cftunnel run")} or ${color.bold("cftunnel run -d")} for background mode.`,
+	);
 }
