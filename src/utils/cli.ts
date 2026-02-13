@@ -74,6 +74,11 @@ interface DomainArgs {
 	clear: boolean;
 }
 
+interface CompletionsArgs {
+	command: "completions";
+	shell: string | undefined;
+}
+
 interface UnknownArgs {
 	command: "unknown";
 	raw: string;
@@ -88,6 +93,7 @@ export type CliArgs =
 	| StartArgs
 	| StatusArgs
 	| DomainArgs
+	| CompletionsArgs
 	| StopArgs
 	| HelpArgs
 	| VersionArgs
@@ -270,6 +276,13 @@ export function parse(argv: ReadonlyArray<string>): CliArgs {
 				prefix: validatePrefix(str(values.prefix)),
 				clear: values.clear === true,
 			};
+		}
+
+		case "completions": {
+			const { values } = tryParse(rest, {
+				shell: { type: "string", short: "s" },
+			});
+			return { command: "completions", shell: str(values.shell) };
 		}
 
 		default:

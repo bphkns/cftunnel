@@ -22,6 +22,7 @@ ${B}COMMANDS${R}
   token                <name>                              Print tunnel token for a dev
   start  ${D}|${R} run         [flags]                             Run the tunnel
   stop                                                    Stop a background tunnel
+  completions          [--shell SHELL]                     Print shell completions
   help   ${D}|${R} -h                                              Show this help
 
 ${B}FLAGS${R}
@@ -46,6 +47,8 @@ ${B}FLAGS${R}
   start      -q, --quick           Quick tunnel ${D}(random trycloudflare.com URL)${R}
   start      -p, --port PORT       Port for quick tunnel ${D}(default: 3000)${R}
   start      --token TOKEN         Use a specific token
+  ${"─".repeat(70)}
+  completions --shell SHELL        Shell type ${D}(bash, zsh, fish; auto-detects)${R}
 
 ${B}EXAMPLES${R}
   ${D}# Setup & config${R}
@@ -68,6 +71,12 @@ ${B}EXAMPLES${R}
   cftunnel start --quick                  Quick public URL, no domain needed
   cftunnel start --quick -p 8080          Quick tunnel on port 8080
   cftunnel stop                           Stop background tunnel
+
+  ${D}# Shell completions${R}
+  cftunnel completions >> ~/.zshrc        Zsh ${D}(auto-detects shell)${R}
+  cftunnel completions --shell bash       Bash
+  cftunnel completions --shell fish | \\
+    source                                Fish ${D}(or save to completions dir)${R}
 `;
 
 const args = parse(process.argv);
@@ -124,6 +133,10 @@ async function run(): Promise<void> {
 		case "domain": {
 			const { domain } = await import("./commands/domain.js");
 			return domain({ zoneId: args.zoneId, prefix: args.prefix, clear: args.clear });
+		}
+		case "completions": {
+			const { completions } = await import("./commands/completions.js");
+			return completions(args.shell);
 		}
 		case "unknown":
 			console.error(`Unknown command: "${args.raw}"\n`);
