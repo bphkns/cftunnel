@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": true,
+		"noEmit": true,
+		"skipLibCheck": true,
+		"types": ["bun-types"],
+		"isolatedModules": true,
+		"verbatimModuleSyntax": true
+	},
+	"include": ["src"]
+}

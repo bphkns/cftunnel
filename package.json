@@ -1,0 +1,28 @@
+{
+	"name": "cftunnel",
+	"version": "0.1.0",
+	"description": "Cloudflare Tunnel CLI — ngrok-like dev tunnels on your own domain",
+	"type": "module",
+	"bin": {
+		"cftunnel": "./src/index.ts"
+	},
+	"files": ["src/", "README.md", "LICENSE"],
+	"scripts": {
+		"dev": "bun run src/index.ts",
+		"build": "bun build ./src/index.ts --compile --outfile dist/cftunnel",
+		"lint": "biome check src/",
+		"lint:fix": "biome check --write src/",
+		"format": "biome format --write src/",
+		"check": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.0",
+		"@types/bun": "^1.2.0",
+		"typescript": "^5.7.0"
+	},
+	"dependencies": {
+		"@clack/prompts": "^1.0.0",
+		"picocolors": "^1.1.0"
+	},
+	"license": "MIT"
+}
