@@ -171,23 +171,63 @@ function generate(shell: Shell): string {
 	}
 }
 
-export function completions(shell: string | undefined): void {
-	if (!shell) {
-		const detected = detectShell();
-		if (!detected) {
-			console.error("Could not detect shell. Use: cftunnel completions --shell <bash|zsh|fish>");
-			process.exit(1);
-		}
-		console.log(generate(detected));
-		return;
+function installHint(shell: Shell): string {
+	switch (shell) {
+		case "zsh":
+			return [
+				"# Save to a directory in your fpath, then restart shell:",
+				"  mkdir -p ~/.local/share/zsh/completions",
+				"  cftunnel completions --shell zsh > ~/.local/share/zsh/completions/_cftunnel",
+				"",
+				"# Make sure your .zshrc has (before compinit):",
+				"  fpath=(~/.local/share/zsh/completions $fpath)",
+				"  autoload -Uz compinit && compinit",
+				"",
+				"# Then reload:",
+				"  exec zsh",
+			].join("\n");
+		case "bash":
+			return [
+				"# Save and source in .bashrc:",
+				"  mkdir -p ~/.local/share/bash-completion/completions",
+				"  cftunnel completions --shell bash > ~/.local/share/bash-completion/completions/cftunnel",
+				"",
+				"# Then reload:",
+				"  exec bash",
+			].join("\n");
+		case "fish":
+			return [
+				"# Save to fish completions dir:",
+				"  cftunnel completions --shell fish > ~/.config/fish/completions/cftunnel.fish",
+				"",
+				"# Fish picks it up automatically on next session.",
+			].join("\n");
 	}
+}
 
-	if (!isShell(shell)) {
-		console.error(`Unsupported shell: "${shell}". Supported: bash, zsh, fish`);
+export function completions(shell: string | undefined): void {
+	const resolved = shell ?? detectShell() ?? undefined;
+
+	if (!resolved) {
+		console.error("Could not detect shell. Use: cftunnel completions --shell <bash|zsh|fish>");
 		process.exit(1);
 	}
 
-	console.log(generate(shell));
+	if (!isShell(resolved)) {
+		console.error(`Unsupported shell: "${resolved}". Supported: bash, zsh, fish`);
+		process.exit(1);
+	}
+
+	const isTTY = process.stdout.isTTY === true;
+
+	if (isTTY) {
+		console.error(`# cftunnel completions for ${resolved}\n`);
+		console.error(installHint(resolved));
+		console.error("");
+		console.error("# --- Completion script below ---\n");
+	}
+
+	console.log(generate(resolved));
 }
 
 function detectShell(): Shell | undefined {

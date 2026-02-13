@@ -134,5 +134,14 @@ export async function create(name: string, portFlag: number | undefined): Promis
 		].join("\n"),
 	);
 
+	p.log.message(
+		[
+			`${color.bold("Dev server config")} — allow the tunnel hostname:`,
+			`  ${color.bold("Vite")}      ${color.dim(`server: { allowedHosts: [".${config.domain}"] }`)}`,
+			`  ${color.bold("Webpack")}   ${color.dim(`devServer: { allowedHosts: [".${config.domain}"] }`)}`,
+			`  ${color.bold("Next.js")}   ${color.dim("works out of the box")}`,
+		].join("\n"),
+	);
+
 	p.outro(`Tunnel ready! Run ${color.bold("cftunnel start")} to connect.`);
 }
