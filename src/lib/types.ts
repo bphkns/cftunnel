@@ -112,8 +112,8 @@ export interface CfAccount {
 export interface AppConfig {
 	apiToken: string;
 	accountId: string;
-	zoneId: string;
-	domain: string;
-	prefix: string;
+	zoneId: string | undefined;
+	domain: string | undefined;
+	prefix: string | undefined;
 	defaultPort: number;
 }

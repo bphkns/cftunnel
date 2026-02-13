@@ -2,17 +2,29 @@ import * as p from "@clack/prompts";
 import color from "picocolors";
 import type { ApiClient } from "../lib/api.js";
 import { createApiClient } from "../lib/api.js";
-import { requireConfig } from "../lib/config.js";
+import { hasDomain, requireConfig } from "../lib/config.js";
+import { showTunnels } from "../utils/tunnels.js";
 
 export interface DeleteFlags {
 	dnsOnly: boolean;
 	tunnelOnly: boolean;
+	force: boolean;
 }
 
 function scopeLabel(flags: DeleteFlags): string {
 	if (flags.dnsOnly) return "DNS record only";
 	if (flags.tunnelOnly) return "tunnel only (keeping DNS)";
 	return "tunnel + DNS record";
+}
+
+async function confirmAction(message: string, force: boolean): Promise<void> {
+	if (force) return;
+
+	const confirmed = await p.confirm({ message });
+	if (p.isCancel(confirmed) || !confirmed) {
+		p.cancel("Cancelled.");
+		process.exit(0);
+	}
 }
 
 async function findTunnel(api: ApiClient, accountId: string, tunnelName: string) {
@@ -30,7 +42,6 @@ async function findTunnel(api: ApiClient, accountId: string, tunnelName: string)
 	if (!tunnel) {
 		s.stop("Not found");
 		p.log.error(`No tunnel named "${tunnelName}" exists.`);
-		p.log.info(`Run ${color.bold("cftunnel ls")} to see available tunnels.`);
 		return undefined;
 	}
 
@@ -122,9 +133,16 @@ export async function del(name: string, flags: DeleteFlags): Promise<void> {
 	p.intro(color.bgRed(color.white(" cftunnel delete ")));
 
 	const config = requireConfig();
+	if (!hasDomain(config)) {
+		p.log.error("No domain configured. Delete requires a named tunnel with a domain.");
+		process.exit(1);
+	}
+
 	const api = createApiClient(config.apiToken);
 	const tunnelName = `${config.prefix}-${name}`;
 	const hostname = `${tunnelName}.${config.domain}`;
+
+	await showTunnels(api, config.accountId);
 
 	p.log.step(`Target: ${color.bold(hostname)}`);
 	p.log.step(`Scope:  ${color.bold(scopeLabel(flags))}`);
@@ -137,13 +155,7 @@ export async function del(name: string, flags: DeleteFlags): Promise<void> {
 			process.exit(1);
 		}
 
-		const confirmed = await p.confirm({
-			message: `Delete DNS record ${color.bold(hostname)}?`,
-		});
-		if (p.isCancel(confirmed) || !confirmed) {
-			p.cancel("Cancelled.");
-			process.exit(0);
-		}
+		await confirmAction(`Delete DNS record ${color.bold(hostname)}?`, flags.force);
 
 		const ok = await removeDns(api, config.zoneId, record.id, hostname);
 		p.outro(ok ? "Done. DNS record removed." : color.red("Failed to remove DNS record."));
@@ -159,13 +171,10 @@ export async function del(name: string, flags: DeleteFlags): Promise<void> {
 			process.exit(1);
 		}
 
-		const confirmed = await p.confirm({
-			message: `Delete tunnel ${color.bold(tunnelName)}? DNS record will be kept.`,
-		});
-		if (p.isCancel(confirmed) || !confirmed) {
-			p.cancel("Cancelled.");
-			process.exit(0);
-		}
+		await confirmAction(
+			`Delete tunnel ${color.bold(tunnelName)}? DNS record will be kept.`,
+			flags.force,
+		);
 
 		const ok = await removeTunnel(api, config.accountId, tunnel.id, tunnelName);
 		p.outro(ok ? "Done. Tunnel removed." : color.red("Failed to remove tunnel."));
@@ -179,19 +188,12 @@ export async function del(name: string, flags: DeleteFlags): Promise<void> {
 
 	if (!tunnel && !record) {
 		p.log.warn("No tunnel or DNS record found for this name.");
-		p.log.info(`Run ${color.bold("cftunnel ls")} to see available tunnels.`);
 		p.outro(color.yellow("Nothing to delete."));
 		process.exit(1);
 	}
 
 	const parts = [tunnel && `tunnel "${tunnelName}"`, record && `DNS "${hostname}"`].filter(Boolean);
-	const confirmed = await p.confirm({
-		message: `Delete ${parts.join(" and ")}?`,
-	});
-	if (p.isCancel(confirmed) || !confirmed) {
-		p.cancel("Cancelled.");
-		process.exit(0);
-	}
+	await confirmAction(`Delete ${parts.join(" and ")}?`, flags.force);
 
 	const results: string[] = [];
 

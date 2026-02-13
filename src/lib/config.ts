@@ -37,10 +37,14 @@ function isValidConfig(data: unknown): data is AppConfig {
 	if (typeof data !== "object" || data === null) return false;
 	if (!hasKey(data, "apiToken") || typeof data.apiToken !== "string") return false;
 	if (!hasKey(data, "accountId") || typeof data.accountId !== "string") return false;
-	if (!hasKey(data, "zoneId") || typeof data.zoneId !== "string") return false;
-	if (!hasKey(data, "domain") || typeof data.domain !== "string") return false;
-	if (!hasKey(data, "prefix") || typeof data.prefix !== "string") return false;
 	if (!hasKey(data, "defaultPort") || typeof data.defaultPort !== "number") return false;
+	// zoneId, domain, prefix are optional (domain-less mode)
+	if (hasKey(data, "zoneId") && data.zoneId !== undefined && typeof data.zoneId !== "string")
+		return false;
+	if (hasKey(data, "domain") && data.domain !== undefined && typeof data.domain !== "string")
+		return false;
+	if (hasKey(data, "prefix") && data.prefix !== undefined && typeof data.prefix !== "string")
+		return false;
 	return true;
 }
 
@@ -99,6 +103,14 @@ export function saveToken(token: string): Result<void, ConfigError> {
 
 export function configExists(): boolean {
 	return existsSync(configPath());
+}
+
+export function hasDomain(config: AppConfig): config is AppConfig & {
+	zoneId: string;
+	domain: string;
+	prefix: string;
+} {
+	return Boolean(config.zoneId && config.domain && config.prefix);
 }
 
 function pidPath(): string {
