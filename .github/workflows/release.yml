@@ -131,6 +131,7 @@ jobs:
             cp "$dir/cftunnel" "release/$target"
             chmod +x "release/$target"
           done
+          cp install.sh release/install.sh
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
