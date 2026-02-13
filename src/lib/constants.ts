@@ -9,4 +9,4 @@ export const TOKEN_FILE_NAME = "tunnel-token";
 export const PID_FILE_NAME = "cloudflared.pid";
 export const LOG_FILE_NAME = "cloudflared.log";
 export const TUNNEL_TOKEN_ENV = "CFTUNNEL_TOKEN";
-export const VERSION = "0.1.0";
+export const VERSION = "0.1.1";
