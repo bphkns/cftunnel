@@ -1,0 +1,25 @@
+src/utils/cli.ts
+  52fbb1069d89d979 1-12,15-49,51-96,98-140,144-155,157-162,165-172,175-179,181-185,187-194
+src/index.ts
+  52fbb1069d89d979 4,11,23-25,33,43,46-52,59,63,71,75,81-82
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.2",
+  "base_commit_sha": "0251dedb42f7b8c93abde2eee22b63eecd3a5f06",
+  "prompts": {
+    "52fbb1069d89d979": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_3a977c525ffe0KZgpEOBXGC6CO",
+        "model": "anthropic/claude-opus-4-6"
+      },
+      "human_author": "Bikash Phukan <bphkns@gmail.com>",
+      "messages": [],
+      "total_additions": 208,
+      "total_deletions": 103,
+      "accepted_lines": 202,
+      "overriden_lines": 0
+    }
+  }
+}
